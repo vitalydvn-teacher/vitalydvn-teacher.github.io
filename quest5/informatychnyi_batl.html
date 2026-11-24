@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Інформатичний батл</title>
+<style>
+:root{--navy:#12345a;--blue:#0879b9;--bg:#eef4fb;--ink:#17365d}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#eaf3ff,#f7fbff);color:var(--ink);min-height:100vh;padding:24px}
+.wrap{max-width:760px;margin:30px auto;background:white;border-radius:22px;box-shadow:0 12px 35px #17365d18;overflow:hidden}
+header{background:linear-gradient(135deg,#12345a,#0879b9);color:white;text-align:center;padding:30px 22px}
+header .emoji{font-size:42px}
+header h1{margin:8px 0;font-size:clamp(25px,5vw,36px)}
+header p{margin:0;color:#dceeff}
+main{padding:26px}
+.progress{height:9px;background:#e5edf6;border-radius:20px;overflow:hidden;margin:12px 0 22px}
+#bar{height:100%;width:0;background:#12a5c7;transition:width .25s}
+.meta{display:flex;justify-content:space-between;gap:12px;color:#58708d;font-size:14px}
+h2{font-size:22px;line-height:1.35}
+.answers{display:grid;gap:11px;margin:22px 0}
+.answer{border:2px solid #dce6f1;border-radius:12px;padding:14px;text-align:left;background:#fff;color:var(--ink);font-size:16px;cursor:pointer}
+.answer:hover{border-color:var(--blue);background:#f4faff}
+.answer:disabled{cursor:default}
+.answer.correct{border-color:#159b63;background:#eaf8f1}
+.answer.wrong{border-color:#d64b4b;background:#fff0f0}
+button.primary{border:0;border-radius:11px;background:var(--blue);color:white;padding:13px 22px;font-size:16px;font-weight:bold;cursor:pointer}
+button.primary:disabled{opacity:.45;cursor:not-allowed}
+.feedback{min-height:26px;font-weight:bold}
+.result{text-align:center;padding:15px 0}
+.score{font-size:48px;font-weight:bold;color:var(--blue)}
+footer{text-align:center;color:#72849a;font-size:13px;padding:0 20px 22px}
+.hidden{display:none}
+@media(max-width:520px){body{padding:10px}.wrap{margin:8px auto}main{padding:19px}.meta{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="emoji">💻</div>
+<h1>Інформатичний батл</h1>
+<p>Перевір свої знання з інформатики!</p>
+</header>
+<main>
+<section id="game">
+<div class="meta"><span id="counter">Запитання 1 із 5</span><span id="points">Бали: 0</span></div>
+<div class="progress"><div id="bar"></div></div>
+<h2 id="question"></h2>
+<div class="answers" id="answers"></div>
+<div class="feedback" id="feedback" aria-live="polite"></div>
+<button class="primary" id="next" disabled>Наступне запитання →</button>
+</section>
+<section id="finish" class="result hidden">
+<div style="font-size:48px">🏆</div>
+<h2>Батл завершено!</h2>
+<div class="score" id="finalScore"></div>
+<p id="message"></p>
+<button class="primary" onclick="restart()">Спробувати ще раз</button>
+</section>
+</main>
+<footer>VITALIY DIGITAL LAB · Навчальна гра з інформатики</footer>
+</div>
+<script>
+const questions=[
+{q:"Що означає абревіатура HTML?",a:["Мова розмітки гіпертексту","Мова програмування Python","Графічний редактор","Операційна система"],c:0,why:"HTML — мова розмітки, за допомогою якої створюють структуру вебсторінок."},
+{q:"Який тег задає найбільший заголовок HTML?",a:["<p>","<h1>","<head>","<title>"],c:1,why:"Тег <h1> задає заголовок першого рівня."},
+{q:"Яка властивість CSS змінює колір тексту?",a:["background","font-size","color","border"],c:2,why:"Властивість color визначає колір тексту."},
+{q:"Яка мова найчастіше додає інтерактивність вебсторінці?",a:["JavaScript","HTML","SQL","XML"],c:0,why:"JavaScript дає змогу реагувати на дії користувача та змінювати вміст сторінки."},
+{q:"Який файл зазвичай є головною сторінкою сайту на GitHub Pages?",a:["start.docx","photo.png","index.html","readme.txt"],c:2,why:"GitHub Pages шукає index.html як файл головної сторінки."}
+];
+let current=0,score=0,selected=false;
+const $=id=>document.getElementById(id);
+function render(){
+ selected=false;
+ $("counter").textContent=`Запитання ${current+1} із ${questions.length}`;
+ $("points").textContent=`Бали: ${score}`;
+ $("bar").style.width=`${current/questions.length*100}%`;
+ $("question").textContent=questions[current].q;
+ $("feedback").textContent="";
+ $("next").disabled=true;
+ $("next").textContent=current===questions.length-1?"Показати результат":"Наступне запитання →";
+ $("answers").innerHTML="";
+ questions[current].a.forEach((answer,i)=>{
+  const b=document.createElement("button");b.className="answer";b.textContent=answer;
+  b.addEventListener("click",()=>choose(i));$("answers").appendChild(b);
+ });
+}
+function choose(i){
+ if(selected)return;selected=true;
+ const item=questions[current];
+ [...$("answers").children].forEach((b,n)=>{
+  b.disabled=true;
+  if(n===item.c)b.classList.add("correct");
+  else if(n===i)b.classList.add("wrong");
+ });
+ if(i===item.c){score++;$("feedback").textContent="✓ Правильно! "+item.why;$("feedback").style.color="#128354";}
+ else{$("feedback").textContent="✗ Не зовсім. "+item.why;$("feedback").style.color="#bd4141";}
+ $("points").textContent=`Бали: ${score}`;$("next").disabled=false;
+}
+$("next").addEventListener("click",()=>{
+ current++;
+ if(current<questions.length)render();
+ else{
+  $("game").classList.add("hidden");$("finish").classList.remove("hidden");
+  $("bar").style.width="100%";$("finalScore").textContent=`${score} / ${questions.length}`;
+  $("message").textContent=score===5?"Чудово! Ви справжній знавець інформатики!":score>=3?"Гарний результат! Продовжуйте тренуватися.":"Не зупиняйтеся — повторіть матеріал і спробуйте ще раз!";
+ }
+});
+function restart(){current=0;score=0;$("finish").classList.add("hidden");$("game").classList.remove("hidden");render();}
+render();
+</script>
+</body>
+</html>
